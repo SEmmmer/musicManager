@@ -1,3 +1,10 @@
+# frozen_string_literal: true
+
+# Trough +ffmpeg+ in system, get song's information
+# If cannot get information, the function return nil
+# Params:
+# +pwd+::The music path
+#
 class Music
   def initialize(pwd)
     @pwd = pwd
