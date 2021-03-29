@@ -1,19 +1,14 @@
-# frozen_string_literal: true
-
-# Trough +ffmpeg+ in system, get song's information
-# If cannot get information, the function return nil
-# Params:
-# +pwd+::The music path
+require_relative 'exceptions'
 
 class Music
   def initialize(pwd, name)
     @pwd = pwd + "/"
     @name = name
-    @fullpath = @pwd +"\'" + name + "\'"
+    @fullpath = +@pwd + name
   end
 
   def ffmpeg
-    info = `ffmpeg -i #{@fullpath} 2>&1`
+    info = `ffmpeg -i "#{@fullpath}" 2>&1`
     info.split('Metadata', 2)[1]
   end
 
@@ -24,7 +19,7 @@ class Music
         return line.split(':', 2)[1].strip if line.downcase.include? 'artist'
       end
     end
-    'unknown'
+    raise NoArtist
   end
 
   def title
@@ -36,7 +31,7 @@ class Music
         end
       end
     end
-    'no_title'
+    raise NoTitle
   end
 
   def album
@@ -46,7 +41,7 @@ class Music
         return line.split(':', 2)[1].strip if line.downcase.include? 'album'
       end
     end
-    'unknown'
+    raise NoAlbum
   end
 
   def is_cover

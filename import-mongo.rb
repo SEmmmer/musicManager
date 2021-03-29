@@ -1,12 +1,23 @@
 require 'find'
-require_relative 'sys-ffmpeg'
-require 'mongo'
 require 'sqlite3'
+require_relative 'sys-ffmpeg'
+require_relative 'brain-ffmpeg'
+require_relative 'exceptions'
 
-client = Mongo::Client.new(['127.0.0.1:27017'], database: 'MusicManager')
-col = client[:AllMusic]
+sqlite_database = SQLite3::Database.new './local_music_list.db'
+rows = sqlite_database.execute <<-SQL
+  create table if not exists music (
+    title TEXT ,
+    artist TEXT,    
+    album TEXT ,
+    pwd TEXT,
+    is_cover INTEGER ,
+    is_inst INTEGER ,
+    is_mix INTEGER 
+  );
+SQL
 
-music_dir = '/Users/emmmer/Downloads/test'
+music_dir = '/Users/kiva/Music/Music/Media.localized/Apple Music'
 Find.find(music_dir) do |file_path|
 
   music_path = file_path unless File.directory?(file_path)
@@ -14,10 +25,22 @@ Find.find(music_dir) do |file_path|
   name = music_path.reverse.split('/', 2)[0].reverse
   path = music_path.reverse.split('/', 2)[1].reverse
   music = Music.new(path, name)
-  puts music.album
-  puts music.artist
-  puts music.title
-  puts path
-  puts name
+  begin
+    sqlite_database.execute("insert into music values (?,?,?,?,?,?,?)", [
+      music.title,
+      music.artist,
+      music.album,
+      music_path,
+      music.is_cover,
+      music.is_inst,
+      music.is_mix
+    ])
+  rescue NoTitle
+    puts 'this music have no meta-data in its tag'
+  rescue NoArtist
+    puts 'this music have no meta-data in its tag'
+  rescue NoAlbum
+    puts 'this music have no meta-data in its tag'
 
+  end
 end
