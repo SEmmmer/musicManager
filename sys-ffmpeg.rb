@@ -4,48 +4,62 @@
 # If cannot get information, the function return nil
 # Params:
 # +pwd+::The music path
-#
+
 class Music
-  def initialize(pwd)
-    @pwd = pwd
+  def initialize(pwd, name)
+    @pwd = pwd + "/"
+    @name = name
+    @fullpath = @pwd +"\'" + name + "\'"
   end
 
   def ffmpeg
-    info = `ffmpeg -i #{@pwd} 2>&1`
+    info = `ffmpeg -i #{@fullpath} 2>&1`
     info.split('Metadata', 2)[1]
   end
 
   def artist
     info = ffmpeg
-    info.each_line do |line|
-      return line.split(':', 2)[1].strip if line.downcase.include? 'artist'
+    if info
+      info.each_line do |line|
+        return line.split(':', 2)[1].strip if line.downcase.include? 'artist'
+      end
     end
-    nil
+    'unknown'
   end
 
   def title
     info = ffmpeg
-    info.each_line do |line|
-      if line.downcase.include?('title') || line.downcase.include?('name')
-        return line.split(':', 2)[1].strip
+    if info
+      info.each_line do |line|
+        if line.downcase.include?('title') || line.downcase.include?('name')
+          return line.split(':', 2)[1].strip
+        end
       end
     end
-    nil
+    'no_title'
   end
 
   def album
     info = ffmpeg
-    info.each_line do |line|
-      return line.split(':', 2)[1].strip if line.downcase.include? 'album'
+    if info
+      info.each_line do |line|
+        return line.split(':', 2)[1].strip if line.downcase.include? 'album'
+      end
     end
-    nil
+    'unknown'
+  end
+
+  def is_cover
+    title.downcase.include?('cover') || title.include?('翻自')
+  end
+
+  def is_mix
+    title.downcase.include?(' mix') || title.downcase.include?('mix ') || title.downcase.include?('remix')
+  end
+
+  def is_inst
+    title.downcase.include?('inst')
   end
 
   protected :ffmpeg
 end
-
-music1 = Music.new('/Users/emmmer/Downloads/a.m4p')
-# music1.ffmpeg
-puts music1.artist
-puts music1.title
-puts music1.album
